@@ -182,5 +182,6 @@ For fully autonomous onchain execution, connect the approved action payload to:
 - `lib/policy.js`: shared policy logic
 - `lib/chain.js`: ENS and Uniswap helpers
 - `lib/runtime-store.js`: persistent runtime storage
-- `data/runtime.json`: current server state
+- `data/runtime.json`: current server state (gitignored; created at runtime)
 - `HOW_TO_USE.md`: operator guide
+- `FEEDBACK.md`: Uniswap developer platform notes
