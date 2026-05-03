@@ -132,6 +132,8 @@ npm.cmd run dev
 
 3. Open `http://localhost:3000`
 
+ENS and Uniswap reads use the HTTP RPC in `lib/config.js` (`RPC_URL`). Override there if your provider blocks public endpoints.
+
 ## Production run
 
 ```powershell
