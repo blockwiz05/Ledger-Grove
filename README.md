@@ -2,6 +2,11 @@
 
 Ledger Grove is a Next.js MVP for the ETHGlobal OpenAgents hackathon: an ENS-powered treasury control plane where `sprucevault.eth` defines rules once, external agents register over HTTP, and every action is checked against treasury policy before execution.
 
+## Prerequisites
+
+- **Node.js** 18.18 or newer (20 LTS recommended)
+- **npm** 9+
+
 ## What changed
 
 The app is no longer just a browser simulation.
