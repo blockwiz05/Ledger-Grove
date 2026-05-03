@@ -1,3 +1,4 @@
+# Ledger Grove — local and build artifacts
 node_modules
 .next
 .env
