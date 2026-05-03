@@ -101,6 +101,8 @@ Shows:
 
 ## How your real server agent should use this
 
+All examples assume the app is at **`http://localhost:3000`**. In production, substitute your deployed origin (same paths, HTTPS).
+
 ### Registration
 
 Your agent should register once:
