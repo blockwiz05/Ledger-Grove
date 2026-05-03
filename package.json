@@ -1,0 +1,17 @@
+{
+  "name": "ledger-grove",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ENS-powered treasury agent MVP for ETHGlobal OpenAgents.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^16.2.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "viem": "^2.48.8"
+  }
+}
