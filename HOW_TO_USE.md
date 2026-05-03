@@ -146,6 +146,7 @@ This keeps the Ledger Grove audit trail in sync with your real runtime.
 ## Notes
 
 - Runtime state is stored in `data/runtime.json`.
+- Fresh clones may not include that file until the server writes it; the app bootstraps defaults on first request.
 - Uniswap quotes are live reads on Ethereum mainnet.
 - ENS resolution is live when records exist.
 - The app is best used as a control plane for existing agents, not as the final signing engine itself.
