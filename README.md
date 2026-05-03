@@ -1,6 +1,6 @@
 # Ledger Grove
 
-Ledger Grove is a Next.js MVP for the ETHGlobal OpenAgents hackathon: an ENS-powered treasury control plane where `0xvinit.eth` defines rules once, external agents register over HTTP, and every action is checked against treasury policy before execution.
+Ledger Grove is a Next.js MVP for the ETHGlobal OpenAgents hackathon: an ENS-powered treasury control plane where `sprucevault.eth` defines rules once, external agents register over HTTP, and every action is checked against treasury policy before execution.
 
 ## What changed
 
@@ -63,8 +63,8 @@ Example body:
   "id": "market-steward-01",
   "name": "Market Steward",
   "roleKey": "trader",
-  "ens": "trader.0xvinit.eth",
-  "walletOrEns": "trader.0xvinit.eth",
+  "ens": "trader.sprucevault.eth",
+  "walletOrEns": "trader.sprucevault.eth",
   "runtimeUrl": "http://localhost:4001",
   "triggerType": "rebalance",
   "automationEnabled": true
@@ -136,7 +136,7 @@ npm.cmd run start
 
 ## Best demo path
 
-1. Open `Owner Setup` and keep `0xvinit.eth`.
+1. Open `Owner Setup` and keep `sprucevault.eth`.
 2. Open `Agent Registry` and show the built-in agents.
 3. Open `Automation` and click `Run Automation Now`.
 4. Show that `Market Steward` prepared a live `USDC -> ETH` route.

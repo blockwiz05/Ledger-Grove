@@ -9,7 +9,7 @@ export async function POST(request) {
   const body = await request.json();
   const role = findRole(body.roleKey);
   const resolved = await resolveEnsOrAddress(
-    body.walletOrEns || body.ens || `${body.roleKey}.${body.teamRoot || "0xvinit.eth"}`,
+    body.walletOrEns || body.ens || `${body.roleKey}.${body.teamRoot || "sprucevault.eth"}`,
     role.fallbackAddress,
   );
 

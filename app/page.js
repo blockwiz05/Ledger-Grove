@@ -29,7 +29,7 @@ export default function Page() {
   const [treasuryResolution, setTreasuryResolution] = useState(null);
   const [resolvedAgents, setResolvedAgents] = useState([]);
   const [ownerForm, setOwnerForm] = useState({
-    teamRoot: "0xvinit.eth",
+    teamRoot: "sprucevault.eth",
     treasuryInput: "vitalik.eth",
     policyProfile: "balanced",
   });
