@@ -50,6 +50,19 @@ That makes Ledger Grove the `policy + identity + audit plane`, while your own se
 
 Returns current runtime state plus treasury ENS resolution.
 
+### `POST /api/resolve`
+
+Resolves an ENS name or checks reverse resolution for an `0x` address (used by the wallet connect flow and server-side identity helpers).
+
+Example body:
+
+```json
+{
+  "input": "name.eth",
+  "fallbackAddress": null
+}
+```
+
 ### `POST /api/runtime/config`
 
 Updates:
