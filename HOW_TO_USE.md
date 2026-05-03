@@ -1,5 +1,9 @@
 # How To Use Ledger Grove
 
+## Requirements
+
+Same as the root README: current **Node.js** (18.18+) and **npm**. No extra global CLI tools.
+
 ## Run locally
 
 ```powershell
