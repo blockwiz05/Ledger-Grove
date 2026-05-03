@@ -28,3 +28,5 @@ Project: Ledger Grove
 - More starter examples for treasury assistants, policy engines, and quote-then-execute flows
 - Clear guidance on when to prefer the API versus direct contract quoting for MVP builds
 - A minimal example for building execution payloads that can be handed to another agent or executor
+
+_Submitted as hackathon sponsor feedback for Ledger Grove (OpenAgents); integration uses Quoter V2 reads on mainnet only._
