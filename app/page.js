@@ -62,6 +62,15 @@ export default function Page() {
     details: "{\"txHash\":\"0x-demo\"}",
   });
   const [latestMessage, setLatestMessage] = useState("Loading runtime state...");
+  const [terminalOpen, setTerminalOpen] = useState(true);
+  const [terminalLines, setTerminalLines] = useState([
+    {
+      id: "boot",
+      level: "system",
+      message: "Ledger Grove booting. Waiting for runtime state.",
+      time: new Date().toLocaleTimeString(),
+    },
+  ]);
 
   useEffect(() => {
     void refreshState();
@@ -96,6 +105,10 @@ export default function Page() {
     setOwnerForm(data.state.ownerConfig);
     setAutomationForm(data.state.automationConfig);
     setLatestMessage("Runtime state loaded.");
+    pushTerminal(
+      "system",
+      `Runtime loaded. Owner=${data.state.ownerConfig.teamRoot}, agents=${data.state.agents.length}.`,
+    );
   }
 
   async function connectWallet() {
@@ -122,8 +135,15 @@ export default function Page() {
           ? `Wallet connected as ${data.resolved.normalizedName}.`
           : `Wallet connected: ${shortAddress(data.resolved.address)}.`,
       );
+      pushTerminal(
+        "identity",
+        data.resolved.normalizedName
+          ? `Wallet connected. Reverse ENS resolved to ${data.resolved.normalizedName}.`
+          : `Wallet connected. Address ${shortAddress(data.resolved.address)} has no reverse ENS.`,
+      );
     } catch (error) {
       setLatestMessage(error?.shortMessage || error?.message || "Wallet connection failed.");
+      pushTerminal("error", error?.shortMessage || error?.message || "Wallet connection failed.");
     }
   }
 
@@ -135,6 +155,10 @@ export default function Page() {
       treasuryInput: walletIdentity.address,
     }));
     setLatestMessage("Connected identity copied into owner setup.");
+    pushTerminal(
+      "identity",
+      `Copied connected wallet into owner setup as ${walletIdentity.normalizedName || shortAddress(walletIdentity.address)}.`,
+    );
   }
 
   async function saveOwnerConfig() {
@@ -148,6 +172,10 @@ export default function Page() {
     const data = await response.json();
     setState(data.state);
     setLatestMessage("Owner configuration updated.");
+    pushTerminal(
+      "config",
+      `Owner settings saved. teamRoot=${ownerForm.teamRoot}, treasury=${ownerForm.treasuryInput}, profile=${ownerForm.policyProfile}.`,
+    );
     await refreshState();
   }
 
@@ -162,6 +190,10 @@ export default function Page() {
     const data = await response.json();
     setState(data.state);
     setLatestMessage("Automation configuration updated.");
+    pushTerminal(
+      "config",
+      `Automation settings saved. stable=${automationForm.currentStableRatio}/${automationForm.targetStableRatio}, treasury=$${automationForm.treasuryUsd}.`,
+    );
   }
 
   async function registerAgent() {
@@ -185,6 +217,10 @@ export default function Page() {
       automationEnabled: true,
     });
     setLatestMessage(`Registered ${data.agent.name}.`);
+    pushTerminal(
+      "registry",
+      `Registered agent ${data.agent.name} as ${data.agent.roleKey}. identity=${data.agent.ens || data.agent.walletOrEns}, trigger=${data.agent.triggerType}, auto=${data.agent.automationEnabled}.`,
+    );
   }
 
   async function removeAgent(id) {
@@ -196,6 +232,7 @@ export default function Page() {
     const data = await response.json();
     setState(data.state);
     setLatestMessage("Agent removed.");
+    pushTerminal("registry", `Removed custom agent ${id}.`);
   }
 
   async function toggleAgent(agent) {
@@ -210,9 +247,14 @@ export default function Page() {
     const data = await response.json();
     setState(data.state);
     setLatestMessage(`${data.agent.name} updated.`);
+    pushTerminal(
+      "registry",
+      `Updated agent ${data.agent.name}. automationEnabled=${data.agent.automationEnabled}.`,
+    );
   }
 
   async function runAutomation() {
+    pushTerminal("automation", "Run Automation Now clicked. Calling POST /api/automation/run.");
     const response = await fetch("/api/automation/run", { method: "POST" });
     const data = await response.json();
     setState(data.state);
@@ -221,9 +263,14 @@ export default function Page() {
         ? `Automation prepared ${data.latestAction.type} for ${data.latestAction.actorName}.`
         : "Automation ran with no new actions.",
     );
+    pushTerminalBatch(data.trace || []);
   }
 
   async function runPolicyCheck() {
+    pushTerminal(
+      "api",
+      `Policy check requested for agent=${policyTest.agentId}, action=${policyTest.actionType}, amount=$${policyTest.amountUsd}.`,
+    );
     const response = await fetch("/api/policy/check", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -237,9 +284,14 @@ export default function Page() {
     const data = await response.json();
     setPolicyResponse(data);
     setLatestMessage(data.ok ? "Policy check completed." : "Policy check failed.");
+    pushTerminalBatch(data.trace || []);
   }
 
   async function sendActionReport() {
+    pushTerminal(
+      "api",
+      `Reporting action result. agent=${reportPayload.agentId}, type=${reportPayload.actionType}, status=${reportPayload.status}.`,
+    );
     const response = await fetch("/api/actions/report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -254,6 +306,35 @@ export default function Page() {
     const data = await response.json();
     setState(data.state);
     setLatestMessage("Action report stored.");
+    pushTerminalBatch(data.trace || []);
+  }
+
+  function pushTerminal(level, message) {
+    setTerminalLines((current) => [
+      {
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        level,
+        message,
+        time: new Date().toLocaleTimeString(),
+      },
+      ...current,
+      ].slice(0, 60));
+  }
+
+  function pushTerminalBatch(lines) {
+    if (!lines?.length) return;
+    setTerminalLines((current) => [
+      ...lines
+        .slice()
+        .reverse()
+        .map((line) => ({
+          id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          level: line.level || "system",
+          message: line.message,
+          time: new Date().toLocaleTimeString(),
+        })),
+      ...current,
+    ].slice(0, 60));
   }
 
   if (!state) {
@@ -868,6 +949,31 @@ export default function Page() {
           </article>
         </section>
       ) : null}
+
+      <section className={`terminal-shell ${terminalOpen ? "is-open" : "is-closed"}`}>
+        <div className="terminal-shell__bar">
+          <div>
+            <strong>Agent Terminal</strong>
+            <small>Shows what Ledger Grove and agents are doing behind the UI</small>
+          </div>
+          <div className="action-row">
+            <button className="button button--ghost" type="button" onClick={() => setTerminalOpen((open) => !open)}>
+              {terminalOpen ? "Hide Terminal" : "Show Terminal"}
+            </button>
+          </div>
+        </div>
+        {terminalOpen ? (
+          <div className="terminal">
+            {terminalLines.map((line) => (
+              <div key={line.id} className={`terminal__line terminal__line--${line.level}`}>
+                <span className="terminal__time">[{line.time}]</span>
+                <span className="terminal__level">{line.level.toUpperCase()}</span>
+                <span className="terminal__message">{line.message}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </section>
     </main>
   );
 }

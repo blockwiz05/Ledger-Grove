@@ -29,5 +29,14 @@ export async function POST(request) {
     };
   });
 
-  return NextResponse.json({ ok: true, state: next });
+  return NextResponse.json({
+    ok: true,
+    state: next,
+    trace: [
+      {
+        level: "api",
+        message: `Stored action report for agent=${body.agentId || "-"}, action=${body.actionType || "-"}, status=${body.status || "reported"}.`,
+      },
+    ],
+  });
 }

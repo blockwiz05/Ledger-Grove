@@ -585,6 +585,83 @@ pre {
   padding: 20px;
 }
 
+.terminal-shell {
+  position: sticky;
+  bottom: 18px;
+  z-index: 4;
+  border-radius: 24px;
+  border: 1px solid rgba(154, 232, 198, 0.16);
+  background: rgba(4, 12, 14, 0.92);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.terminal-shell__bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.terminal-shell__bar small {
+  display: block;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.terminal {
+  max-height: 300px;
+  overflow: auto;
+  padding: 14px 18px 18px;
+  font-size: 0.84rem;
+  background:
+    linear-gradient(180deg, rgba(154, 232, 198, 0.03), transparent 18%),
+    rgba(3, 10, 11, 0.98);
+}
+
+.terminal__line {
+  display: grid;
+  grid-template-columns: 92px 86px 1fr;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.terminal__time {
+  color: #7f9f94;
+}
+
+.terminal__level {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.terminal__message {
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.terminal__line--system .terminal__level,
+.terminal__line--config .terminal__level {
+  color: var(--mint);
+}
+
+.terminal__line--automation .terminal__level,
+.terminal__line--registry .terminal__level {
+  color: var(--amber);
+}
+
+.terminal__line--api .terminal__level,
+.terminal__line--identity .terminal__level {
+  color: #82d0ff;
+}
+
+.terminal__line--error .terminal__level {
+  color: var(--rose);
+}
+
 @media (max-width: 1100px) {
   .card--hero,
   .top-grid,
@@ -633,7 +710,12 @@ pre {
 
   .brief-head,
   .audit-item__top,
+  .terminal-shell__bar,
   .section-head {
     flex-direction: column;
+  }
+
+  .terminal__line {
+    grid-template-columns: 1fr;
   }
 }

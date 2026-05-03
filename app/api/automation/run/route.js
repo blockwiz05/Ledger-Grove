@@ -7,28 +7,50 @@ import { updateRuntimeState } from "../../../../lib/runtime-store.js";
 export const runtime = "nodejs";
 
 export async function POST() {
+  const trace = [];
   const result = await updateRuntimeState(async (state) => {
     const now = new Date().toISOString();
     const generatedActions = [];
     const newEvents = [];
     const newAudit = [];
     const profile = POLICY_PROFILES[state.ownerConfig.policyProfile] || POLICY_PROFILES.balanced;
+    const activeAgents = state.agents.filter((agent) => agent.automationEnabled);
+
+    trace.push({
+      level: "automation",
+      message: `Loaded runtime state. activeAgents=${activeAgents.length}, policyProfile=${state.ownerConfig.policyProfile}.`,
+    });
 
     const traderAgent = state.agents.find(
       (agent) => agent.roleKey === "trader" && agent.automationEnabled,
     );
     if (traderAgent) {
+      trace.push({
+        level: "automation",
+        message: `Evaluating trader agent ${traderAgent.name} (${traderAgent.ens || traderAgent.id}) for rebalance.`,
+      });
       const stableExcess =
         ((state.automationConfig.currentStableRatio - state.automationConfig.targetStableRatio) /
           100) *
         state.automationConfig.treasuryUsd;
+      trace.push({
+        level: "automation",
+        message: `Computed stable excess = $${stableExcess.toFixed(2)} from ratio ${state.automationConfig.currentStableRatio}% vs target ${state.automationConfig.targetStableRatio}%.`,
+      });
 
       if (stableExcess > 0) {
+        const requestedAmountUsd = stableExcess;
         const amountUsd = Math.min(
           stableExcess,
           profile.traderRebalanceMax,
           profile.traderSwapMax,
         );
+        if (requestedAmountUsd !== amountUsd) {
+          trace.push({
+            level: "automation",
+            message: `Requested rebalance capped from $${requestedAmountUsd.toFixed(2)} to $${amountUsd.toFixed(2)} by active policy limits.`,
+          });
+        }
         const policy = evaluatePolicy({
           actionType: "swap",
           roleKey: "trader",
@@ -37,9 +59,17 @@ export async function POST() {
           profileKey: state.ownerConfig.policyProfile,
           teamRoot: state.ownerConfig.teamRoot,
         });
+        trace.push({
+          level: policy.status === "blocked" ? "error" : policy.status === "review" ? "automation" : "automation",
+          message: `Trader policy result=${policy.status}. ${policy.body}`,
+        });
 
         if (policy.status !== "blocked") {
           const quote = await fetchBestUniswapQuote("USDC", "ETH", amountUsd);
+          trace.push({
+            level: "automation",
+            message: `Fetched live Uniswap quote. output=${quote.outputAmount.toFixed(4)} ETH, fee=${quote.fee / 10000}%.`,
+          });
           const action = {
             id: `action-${Date.now()}-swap`,
             type: "swap",
@@ -78,8 +108,23 @@ export async function POST() {
               outputAmount: quote.outputAmount.toFixed(4),
             },
           });
+        } else {
+          trace.push({
+            level: "error",
+            message: "Trader action rejected. No pending swap action created.",
+          });
         }
+      } else {
+        trace.push({
+          level: "automation",
+          message: "Trader trigger not fired. Stable ratio is not above target.",
+        });
       }
+    } else {
+      trace.push({
+        level: "automation",
+        message: "No active trader agent found for rebalance automation.",
+      });
     }
 
     const opsAgent = state.agents.find(
@@ -89,6 +134,10 @@ export async function POST() {
       opsAgent &&
       state.automationConfig.researchUsdcBalance < state.automationConfig.researchTopupThreshold
     ) {
+      trace.push({
+        level: "automation",
+        message: `Evaluating ops agent ${opsAgent.name}. researchBalance=${state.automationConfig.researchUsdcBalance}, threshold=${state.automationConfig.researchTopupThreshold}.`,
+      });
       const amountUsd = state.automationConfig.researchTopupAmount;
       const policy = evaluatePolicy({
         actionType: "transfer",
@@ -97,10 +146,18 @@ export async function POST() {
         profileKey: state.ownerConfig.policyProfile,
         teamRoot: state.ownerConfig.teamRoot,
       });
+      trace.push({
+        level: policy.status === "blocked" ? "error" : "automation",
+        message: `Ops policy result=${policy.status}. ${policy.body}`,
+      });
       if (policy.status !== "blocked") {
         const destination = await resolveEnsOrAddress(
           `research.${state.ownerConfig.teamRoot}`,
         );
+        trace.push({
+          level: "automation",
+          message: `Resolved top-up destination to ${destination.normalizedName || destination.address || "unresolved"}.`,
+        });
         const action = {
           id: `action-${Date.now()}-topup`,
           type: "transfer",
@@ -136,7 +193,34 @@ export async function POST() {
             destination: destination.normalizedName || destination.address,
           },
         });
+      } else {
+        trace.push({
+          level: "error",
+          message: "Ops top-up rejected. No pending transfer action created.",
+        });
       }
+    } else if (opsAgent) {
+      trace.push({
+        level: "automation",
+        message: `Ops trigger not fired. researchBalance=${state.automationConfig.researchUsdcBalance} is above threshold ${state.automationConfig.researchTopupThreshold}.`,
+      });
+    } else {
+      trace.push({
+        level: "automation",
+        message: "No active ops agent found for top-up automation.",
+      });
+    }
+
+    if (!generatedActions.length) {
+      trace.push({
+        level: "automation",
+        message: "Automation cycle finished with no new pending actions.",
+      });
+    } else {
+      trace.push({
+        level: "automation",
+        message: `Automation cycle finished. createdActions=${generatedActions.length}.`,
+      });
     }
 
     return {
@@ -152,5 +236,6 @@ export async function POST() {
     ok: true,
     state: result,
     latestAction: result.latestAction,
+    trace,
   });
 }
